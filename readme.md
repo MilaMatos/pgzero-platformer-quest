@@ -11,11 +11,11 @@ Um charmoso jogo de plataforma 2D desenvolvido em Python com a biblioteca Pygame
 ## ✨ Recursos
 * **Jogabilidade Clássica de Plataforma:** Movimentação entre plataformas baseada em pulos para chegar até seu objetivo.
 
-    ![Objetivo do Jogo](images\heart.png)
+    ![Objetivo do Jogo](images/heart.png)
 
 * **Inimigos com Patrulha:** Inimigos que se movem de um lado para o outro em suas respectivas plataformas. 
 
-    ![Herói do Jogo](images\enemy_walk_1.png) ![Herói do Jogo](images\enemy_walk_2.png)
+    ![Herói do Jogo](images/enemy_walk_1.png) ![Herói do Jogo](images/enemy_walk_2.png)
 * **Sistema de Menus Completo:**
     * Menu Principal para iniciar o jogo.
     * Menu de Pause (ativado com a tecla `ESC`) com opções de continuar, reiniciar e voltar ao menu.
@@ -23,15 +23,15 @@ Um charmoso jogo de plataforma 2D desenvolvido em Python com a biblioteca Pygame
 
 * **Cronômetro:** Um contador de tempo na tela que registra sua performance. 
 
-    ![Timer](images\timer_plate.png)
+    ![Timer](images/timer_plate.png)
 
 * **Música e Efeitos Sonoros:** Com opção de ligar e desligar.
 * **Animações de Sprite:** Animações para o personagem e inimigos, tanto parados quanto em movimento. 
 
-    ![Herói do Jogo](images\hero_idle_1.png)
-    ![Herói do Jogo](images\hero_idle_2.png)
-    ![Herói do Jogo](images\hero_run_1.png)
-    ![Herói do Jogo](images\hero_run_2.png)
+    ![Herói do Jogo](images/hero_idle_1.png)
+    ![Herói do Jogo](images/hero_idle_2.png)
+    ![Herói do Jogo](images/hero_run_1.png)
+    ![Herói do Jogo](images/hero_run_2.png)
 
 ## 🛠️ Tecnologias Utilizadas
 
