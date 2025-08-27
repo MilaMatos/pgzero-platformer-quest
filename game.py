@@ -20,6 +20,10 @@ sound_button = Actor('button_sound_on')
 exit_button = Actor('button_exit') 
 timer_plate = Actor('timer_plate', topleft=(10, 10))
 
+music.play('background_music.wav')
+music.set_volume(0.8)
+if not music_on:
+    music.pause()
 
 class AnimatedActor:
     def __init__(self, image_files, pos, anchor=('center', 'bottom')):
@@ -39,26 +43,37 @@ class Player(AnimatedActor):
         super().__init__(['hero_idle_1', 'hero_idle_2'], pos)
         self.animations = {'idle': ['hero_idle_1', 'hero_idle_2'], 'run': ['hero_run_1', 'hero_run_2'], 'jump': ['hero_jump']}
         self.current_anim = 'idle'
-        self.vx = 0; self.vy = 0; self.on_ground = False; self.direction = 1; self.jumps_left = 1
+        self.vx = 0; self.vy = 0; self.on_ground = False; self.direction = 1
+
     def update(self, platforms):
         if keyboard.left: self.vx = -4; self.direction = -1; self.current_anim = 'run'
         elif keyboard.right: self.vx = 4; self.direction = 1; self.current_anim = 'run'
         else: self.vx = 0; self.current_anim = 'idle'
+        
         self.vy += GRAVITY
         if self.vy > 10: self.vy = 10
+        
         self.actor.x += self.vx; self.actor.y += self.vy
+        
+        if self.actor.left < 0:
+            self.actor.left = 0
+        if self.actor.right > WIDTH:
+            self.actor.right = WIDTH
+
         self.actor.flip_x = self.direction == -1
         if not self.on_ground: self.current_anim = 'jump'
         self.update_animation()
+        
         self.on_ground = False
         for platform in platforms:
             if self.actor.colliderect(platform) and self.vy > 0:
                 if self.actor.bottom < platform.bottom:
                     self.actor.bottom = platform.top
-                    self.vy = 0; self.on_ground = True; self.jumps_left = 1
+                    self.vy = 0; self.on_ground = True
+
     def jump(self):
-        if self.jumps_left > 0:
-            self.vy = -7.5; self.jumps_left -= 1
+        if self.on_ground:
+            self.vy = -7.5
             if music_on: sounds.jump_sound.play()
 
 class Enemy(AnimatedActor):
@@ -74,8 +89,9 @@ class Enemy(AnimatedActor):
         self.update_animation()
 
 def setup_game():
-    global player, platforms, enemies, saida_ator, elapsed_time, final_time
+    global player, platforms, enemies, goal_actor, elapsed_time, final_time
     elapsed_time = 0.0; final_time = 0.0
+    timer_plate.topleft = (10, 10)
     player = Player((50, HEIGHT - 100))
     platforms = [
         Rect((0, HEIGHT - 40), (300, 40)), Rect((400, HEIGHT - 120), (100, 20)),
@@ -84,7 +100,7 @@ def setup_game():
         Rect((650, HEIGHT - 360), (100, 20)), Rect((450, HEIGHT - 440), (150, 20)),
         Rect((200, HEIGHT - 520), (150, 20)),
     ]
-    saida_ator = Actor('heart', pos=(300, HEIGHT - 570))
+    goal_actor = Actor('heart', pos=(300, HEIGHT - 570))
     enemies = [ Enemy(platform=platforms[1]), Enemy(platform=platforms[2]),
                 Enemy(platform=platforms[3]), Enemy(platform=platforms[4]),
                 Enemy(platform=platforms[5]), Enemy(platform=platforms[6]),
@@ -97,7 +113,7 @@ def draw_game_elements():
             w = Rect((0,0), images.platform.get_size()).width
             for i in range(p.width // w + 1): screen.blit('platform', (p.x + i * w, p.y))
         except AttributeError: screen.draw.filled_rect(p, 'brown')
-    saida_ator.draw(); player.actor.draw()
+    goal_actor.draw(); player.actor.draw()
     for e in enemies: e.actor.draw()
 
 def draw():
@@ -109,14 +125,12 @@ def draw():
         play_button.pos = (WIDTH / 2, HEIGHT / 2 - 120)
         sound_button.pos = (WIDTH / 2, HEIGHT / 2)
         exit_button.pos = (WIDTH / 2, HEIGHT / 2 + 120)
-        play_button.draw()
-        sound_button.draw()
-        exit_button.draw()
+        play_button.draw(); sound_button.draw(); exit_button.draw()
     
     elif game_state == 'playing':
         timer_plate.draw()
         screen.draw.text(f"{elapsed_time:.1f}", center=(timer_plate.centerx + 25, timer_plate.centery), fontsize=30, color="white")
-        
+    
     elif game_state == 'game_over' or game_state == 'win':
         screen.draw.filled_rect(Rect(0,0,WIDTH,HEIGHT), (0,0,0,150))
         restart_button.pos = (WIDTH/2 - 50, HEIGHT/2 + 120)
@@ -126,52 +140,46 @@ def draw():
         if game_state == 'game_over':
             screen.draw.text("GAME OVER", center=(WIDTH/2, HEIGHT/2 - 50), fontsize=80, color="#d0bd7d", owidth=1.5)
         else:
-            screen.draw.text("VENCEU", center=(WIDTH/2, HEIGHT/2 - 100), fontsize=100, color="#d0bd7d", owidth=1.5)
+            screen.draw.text("WIN", center=(WIDTH/2, HEIGHT/2 - 100), fontsize=100, color="#d0bd7d", owidth=1.5)
             timer_plate.center = (WIDTH/2, HEIGHT/2 + 30)
             timer_plate.draw()
             screen.draw.text(f"{final_time:.2f}", center=(timer_plate.centerx + 25, timer_plate.centery), fontsize=40, color="white")
-
-        restart_button.draw()
-        menu_button.draw()
-        sound_button.draw()
+        restart_button.draw(); menu_button.draw(); sound_button.draw()
 
     elif game_state == 'paused':
         screen.draw.filled_rect(Rect(0,0,WIDTH,HEIGHT), (0,0,0,150))
         screen.draw.text("PAUSE", center=(WIDTH/2, HEIGHT/2 - 100), fontsize=80, color="#d0bd7d", owidth=1.5)
-        
         play_button.pos = (WIDTH / 2, HEIGHT / 2)
         restart_button.pos = (WIDTH/2 - 50, HEIGHT/2 + 120)
         menu_button.pos = (WIDTH/2 + 50, HEIGHT/2 + 120)
         sound_button.pos = (WIDTH - 50, 50)
-
-        play_button.draw()
-        restart_button.draw()
-        menu_button.draw()
-        sound_button.draw()
+        play_button.draw(); restart_button.draw(); menu_button.draw(); sound_button.draw()
 
 def update():
     global game_state, elapsed_time, final_time
     if game_state == 'playing':
         elapsed_time += 1 / 60.0
         player.update(platforms)
-        if player.actor.colliderect(saida_ator):
-            game_state = 'win'; final_time = elapsed_time; music.stop()
+        if player.actor.colliderect(goal_actor):
+            game_state = 'win'; final_time = elapsed_time
         for e in enemies:
             e.update()
             if player.actor.colliderect(e.actor):
-                if music_on: sounds.hit_sound.play(); 
-                game_state = 'game_over'; music.stop()
-        if player.actor.top > HEIGHT: game_state = 'game_over'; music.stop()
+                if music_on: sounds.hit_sound.play()
+                game_state = 'game_over'
+        if player.actor.top > HEIGHT:
+            game_state = 'game_over'
 
 def on_key_down(key):
     global game_state
     if key == keys.ESCAPE and game_state in ['playing', 'paused']:
-        if game_state == 'playing': game_state = 'paused'; music.pause()
+        if game_state == 'playing':
+            game_state = 'paused'
         else: 
             game_state = 'playing'
-            if music_on: music.unpause()
     if game_state == 'playing':
-        if key == keys.SPACE or key == keys.UP: player.jump()
+        if key == keys.SPACE or key == keys.UP:
+            player.jump()
 
 def on_mouse_down(pos):
     global game_state, music_on
@@ -179,33 +187,34 @@ def on_mouse_down(pos):
         if sound_button.collidepoint(pos):
             music_on = not music_on
             sound_button.image = 'button_sound_on' if music_on else 'button_sound_off'
-            if not music_on: music.pause()
+            if music_on:
+                music.unpause()
             else:
-                if game_state != 'main_menu': music.unpause()
+                music.pause()
             return
 
     if game_state == 'main_menu':
         if play_button.collidepoint(pos):
             game_state = 'playing'
-            if music_on: music.play('background_music.wav')
         elif exit_button.collidepoint(pos):
             quit()
             
     elif game_state == 'paused':
         if play_button.collidepoint(pos):
             game_state = 'playing'
-            if music_on: music.unpause()
         elif restart_button.collidepoint(pos):
-            music.stop(); setup_game(); game_state = 'playing'
-            if music_on: music.play('background_music.wav')
+            setup_game()
+            game_state = 'playing'
         elif menu_button.collidepoint(pos):
-            music.stop(); setup_game(); game_state = 'main_menu'
+            setup_game()
+            game_state = 'main_menu'
             
     elif game_state in ['game_over', 'win']:
         if restart_button.collidepoint(pos):
-            music.stop(); setup_game(); game_state = 'playing'
-            if music_on: music.play('background_music.wav')
+            setup_game()
+            game_state = 'playing'
         elif menu_button.collidepoint(pos):
-            music.stop(); setup_game(); game_state = 'main_menu'
+            setup_game()
+            game_state = 'main_menu'
 
 pgzrun.go()
